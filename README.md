@@ -1,6 +1,6 @@
 # proxycore
 
-Proof of concept for a lightweight HTTP/1.1 proxy service built with [ASGI](https://asgi.readthedocs.io) and [HTTPCore](https://github.com/encode/httpcore).
+Proof of concept for a lightweight HTTP/1.1 proxy service built with [ASGI](https://asgi.readthedocs.io) and [HTTPCore](https://github.com/encode/httpcore). No maintenance intended.
 
 ## Example (Docker)
 
