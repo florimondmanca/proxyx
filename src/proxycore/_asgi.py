@@ -1,7 +1,8 @@
-from typing import Optional
+from typing import Optional, Tuple
 
 import httpcore
 from starlette.requests import Request
+from starlette.types import Receive, Scope, Send
 
 
 class ProxyApp:
@@ -11,14 +12,14 @@ class ProxyApp:
         self.hostname = hostname
         self.root_path = root_path
 
-    async def __call__(self, scope, receive, send):
+    async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
         if scope["type"] == "lifespan":
             await self._lifespan(scope, receive, send)
         else:
             assert scope["type"] == "http"
             await self._request(scope, receive, send)
 
-    async def _lifespan(self, scope, receive, send):
+    async def _lifespan(self, scope: Scope, receive: Receive, send: Send) -> None:
         while True:
             message = await receive()
             if message["type"] == "lifespan.startup":
@@ -29,7 +30,7 @@ class ProxyApp:
                 await send({"type": "lifespan.shutdown.complete"})
                 return
 
-    async def _request(self, scope, receive, send):
+    async def _request(self, scope: Scope, receive: Receive, send: Send) -> None:
         _, status_code, _, headers, stream = await self.http.request(
             method=self._get_method(scope),
             url=self._get_url(scope),
@@ -50,10 +51,10 @@ class ProxyApp:
         finally:
             await stream.aclose()
 
-    def _get_method(self, scope: dict) -> bytes:
+    def _get_method(self, scope: Scope) -> bytes:
         return scope["method"].encode("utf-8")
 
-    def _get_url(self, scope: dict) -> tuple:
+    def _get_url(self, scope: Scope) -> Tuple[bytes, bytes, int, bytes]:
         host = self.hostname.encode("utf-8")
 
         full_path = (self.root_path + scope["path"]).encode("utf-8")
@@ -62,12 +63,14 @@ class ProxyApp:
 
         return (b"https", host, 443, full_path)
 
-    def _get_headers(self, scope: dict) -> list:
+    def _get_headers(self, scope: Scope) -> list:
         headers = [(key, value) for key, value in scope["headers"] if key != b"host"]
         headers.append((b"host", self.hostname.encode("utf-8")))
         return headers
 
-    def _get_stream(self, scope, receive) -> Optional[httpcore.AsyncByteStream]:
+    def _get_stream(
+        self, scope: Scope, receive: Receive
+    ) -> Optional[httpcore.AsyncByteStream]:
         request = Request(scope, receive=receive)
         if (
             "content-length" in request.headers
