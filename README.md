@@ -1,5 +1,7 @@
 # ProxyCore
 
+[![Build Status](https://dev.azure.com/florimondmanca/public/_apis/build/status/florimondmanca.proxycore?branchName=master)](https://dev.azure.com/florimondmanca/public/_build/latest?definitionId=14&branchName=master)
+
 Proof of concept for a lightweight HTTP/1.1 proxy service built with [ASGI](https://asgi.readthedocs.io) and [HTTPCore](https://github.com/encode/httpcore). No maintenance intended.
 
 ## Setup
