@@ -1,3 +1,9 @@
-httpcore
-starlette
+-e .
+
+# Development.
 uvicorn
+
+# Tooling.
+black
+flake8
+mypy

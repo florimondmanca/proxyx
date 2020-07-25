@@ -1,11 +1,10 @@
-import os
 from typing import Optional
 
 import httpcore
 from starlette.requests import Request
 
 
-class Proxy:
+class ProxyApp:
     http: httpcore.AsyncHTTPTransport
 
     def __init__(self, hostname: str, root_path: str = ""):
@@ -76,9 +75,3 @@ class Proxy:
         ):
             return httpcore.AsyncByteStream(request.stream())
         return None
-
-
-app = Proxy(
-    hostname=os.environ["PROXYCORE_HOSTNAME"],
-    root_path=os.environ.get("PROXYCORE_ROOT_PATH", ""),
-)

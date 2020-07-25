@@ -1,3 +1,15 @@
+# Tooling.
+.coverage
+venv*/
+.python-version
+
+# Caches.
 __pycache__/
+*.pyc
 .mypy_cache/
 .pytest_cache/
+
+# Packaging.
+build/
+dist/
+*.egg-info/
