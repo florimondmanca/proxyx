@@ -20,6 +20,10 @@ scripts/example
 
 This will proxy https://www.encode.io/httpcore (the HTTPCore documentation) from `localhost:8000`.
 
+## Known limitations
+
+- Domain-level redirects are not handled (e.g. proxying `https://encode.io/{path}` won't work because this domain returns a 301 to `https://www.encode.io/{path}`).
+
 ## License
 
 MIT

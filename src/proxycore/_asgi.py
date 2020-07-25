@@ -38,6 +38,9 @@ class ProxyApp:
             stream=self._get_stream(scope, receive),
         )
 
+        is_redirect = 300 <= status_code < 400
+        assert not is_redirect, f"{status_code}: Redirects are not supported yet"
+
         await send(
             {"type": "http.response.start", "status": status_code, "headers": headers}
         )
