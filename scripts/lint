@@ -1,0 +1,12 @@
+#!/bin/sh -e
+
+BIN=""
+if [ -d venv ] ; then
+    BIN="venv/bin/"
+fi
+
+SOURCE_FILES="src"
+
+set -x
+
+${PREFIX}black --target-version=py38 $SOURCE_FILES

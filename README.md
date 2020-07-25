@@ -1,28 +1,28 @@
 # ProxyCore
 
+[![Build Status](https://dev.azure.com/florimondmanca/public/_apis/build/status/florimondmanca.proxycore?branchName=master)](https://dev.azure.com/florimondmanca/public/_build/latest?definitionId=14&branchName=master)
+
 Proof of concept for a lightweight HTTP/1.1 proxy service built with [ASGI](https://asgi.readthedocs.io) and [HTTPCore](https://github.com/encode/httpcore). No maintenance intended.
 
-## Example (Docker)
+## Setup
 
-Clone this repo, then:
+Clone this repository, then install dependencies:
 
 ```bash
-docker build -t proxycore .
-docker run --rm -it -e PROXYCORE_HOSTNAME=encode.io -e PROXYCORE_ROOT_PATH=/httpcore -p 8000:8000 proxycore
+scripts/install
+```
+
+## Example
+
+```bash
+scripts/example
 ```
 
 This will proxy https://www.encode.io/httpcore (the HTTPCore documentation) from `localhost:8000`.
 
-## Example (Host)
+## Known limitations
 
-Clone this repo, then:
-
-```bash
-pip install -r requirements.txt
-PROXYCORE_HOSTNAME=encode.io PROXYCORE_ROOT_PATH=/httpcore uvicorn proxycore:app
-```
-
-This will proxy https://www.encode.io/httpcore (the HTTPCore documentation) from `localhost:8000`.
+- Domain-level redirects are not handled (e.g. proxying `https://encode.io/{path}` won't work because this domain returns a 301 to `https://www.encode.io/{path}`).
 
 ## License
 

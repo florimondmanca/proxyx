@@ -1,0 +1,8 @@
+#!/bin/sh -e
+
+BIN=""
+if [ ! -d venv ]; then
+  BIN="venv/bin/"
+fi
+
+PROXYCORE_HOSTNAME=www.encode.io PROXYCORE_ROOT_PATH=/httpcore ${BIN}uvicorn example:app --port=${PORT:-8000}
