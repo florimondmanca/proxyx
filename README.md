@@ -1,8 +1,8 @@
-# ProxyCore
+# ProxyX
 
-[![Build Status](https://dev.azure.com/florimondmanca/public/_apis/build/status/florimondmanca.proxycore?branchName=master)](https://dev.azure.com/florimondmanca/public/_build/latest?definitionId=14&branchName=master)
+[![Build Status](https://dev.azure.com/florimondmanca/public/_apis/build/status/florimondmanca.proxyx?branchName=master)](https://dev.azure.com/florimondmanca/public/_build/latest?definitionId=14&branchName=master)
 
-Proof of concept for a lightweight HTTP/1.1 proxy service built with [ASGI](https://asgi.readthedocs.io) and [HTTPCore](https://github.com/encode/httpcore). No maintenance intended.
+Proof of concept for a lightweight HTTP/1.1 proxy service built with [ASGI](https://asgi.readthedocs.io) and [HTTPX](https://github.com/encode/httpx). No maintenance intended.
 
 ## Setup
 
@@ -18,7 +18,13 @@ scripts/install
 scripts/example
 ```
 
-This will proxy https://www.encode.io/httpcore (the HTTPCore documentation) from `localhost:8000`.
+This will proxy https://www.python-httpx.org/ (the HTTPX documentation) from `localhost:8000`.
+
+Use environment variables as below to proxy a different target:
+
+```bash
+PROXYX_HOSTNAME="www.example.org" PROXYX_ROOT_PATH="" scripts/example
+```
 
 ## Known limitations
 

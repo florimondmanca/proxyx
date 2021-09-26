@@ -1,8 +1,8 @@
 import os
 
-import proxycore
+import proxyx
 
-app = proxycore.ProxyApp(
-    hostname=os.environ["PROXYCORE_HOSTNAME"],
-    root_path=os.environ.get("PROXYCORE_ROOT_PATH", ""),
+app = proxyx.ProxyApp(
+    hostname=os.environ["PROXYX_HOSTNAME"],
+    root_path=os.environ.get("PROXYX_ROOT_PATH", ""),
 )
