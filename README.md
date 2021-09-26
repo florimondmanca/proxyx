@@ -1,6 +1,6 @@
 # ProxyX
 
-[![Build Status](https://dev.azure.com/florimondmanca/public/_apis/build/status/florimondmanca.proxycore?branchName=master)](https://dev.azure.com/florimondmanca/public/_build/latest?definitionId=14&branchName=master)
+[![Build Status](https://dev.azure.com/florimondmanca/public/_apis/build/status/florimondmanca.proxyx?branchName=master)](https://dev.azure.com/florimondmanca/public/_build/latest?definitionId=14&branchName=master)
 
 Proof of concept for a lightweight HTTP/1.1 proxy service built with [ASGI](https://asgi.readthedocs.io) and [HTTPX](https://github.com/encode/httpx). No maintenance intended.
 
