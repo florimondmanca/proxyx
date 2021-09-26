@@ -1,10 +1,8 @@
-from typing import Tuple
+from typing import List, Optional, Tuple
 
 import httpx
-from starlette.requests import Request
+from starlette.requests import Request as ASGIRequest
 from starlette.types import Receive, Scope, Send
-
-from ._bytestreams import AsyncIteratorByteStream
 
 
 class ProxyApp:
@@ -33,18 +31,17 @@ class ProxyApp:
                 return
 
     async def _http_request(self, scope: Scope, receive: Receive, send: Send) -> None:
+        method, url, headers, stream = self._get_request(scope, receive)
+
         status_code, headers, stream, ext = await self._http.handle_async_request(
-            method=self._get_method(scope),
-            url=self._get_url(scope),
-            headers=self._get_headers(scope),
-            stream=self._get_stream(scope, receive),
+            method=method,
+            url=url,
+            headers=headers,
+            stream=stream,
             extensions={},
         )
 
         assert ext["http_version"] == b"HTTP/1.1"
-
-        is_redirect = 300 <= status_code < 400
-        assert not is_redirect, f"{status_code}: Redirects are not supported yet"
 
         await send(
             {"type": "http.response.start", "status": status_code, "headers": headers}
@@ -59,28 +56,38 @@ class ProxyApp:
         finally:
             await stream.aclose()
 
-    def _get_method(self, scope: Scope) -> bytes:
-        return scope["method"].encode("utf-8")
+    def _get_request(
+        self, scope: Scope, receive: Receive
+    ) -> Tuple[
+        bytes,
+        Tuple[bytes, bytes, Optional[int], bytes],
+        List[Tuple[bytes, bytes]],
+        httpx.AsyncByteStream,
+    ]:
+        asgi_request = ASGIRequest(scope, receive=receive)
 
-    def _get_url(self, scope: Scope) -> Tuple[bytes, bytes, int, bytes]:
-        host = self._hostname.encode("utf-8")
+        method = asgi_request.method.encode("utf-8")
 
-        full_path = (self._root_path + scope["path"]).encode("utf-8")
-        if scope["query_string"]:
-            full_path += b"?%s" % scope["query_string"]
+        url = httpx.URL(
+            scheme="https",  # Only allow proxying to HTTPS services.
+            host=self._hostname,  # Swap hostname.
+            path=self._root_path + asgi_request.url.path,  # Inject root path.
+            query=asgi_request.url.query.encode("utf-8"),
+        )
 
-        return (b"https", host, 443, full_path)
+        headers = asgi_request.headers.mutablecopy()
+        headers["host"] = self._hostname  # Swap hostname.
 
-    def _get_headers(self, scope: Scope) -> list:
-        headers = [(key, value) for key, value in scope["headers"] if key != b"host"]
-        headers.append((b"host", self._hostname.encode("utf-8")))
-        return headers
+        # Build a full HTTPX request to get a proper HTTPX stream object, using
+        # the HTTPX public API only.
+        # (We'd actually only want `httpx._content.encode_content()`,
+        # or `httpx._content.AsyncIterableStream`.)
+        httpx_request = httpx.Request(
+            method=method,
+            url=url,
+            content=asgi_request.stream(),
+        )
+        stream = httpx_request.stream
+        assert isinstance(stream, httpx.AsyncByteStream)
 
-    def _get_stream(self, scope: Scope, receive: Receive) -> httpx.AsyncByteStream:
-        request = Request(scope, receive=receive)
-        if (
-            "content-length" in request.headers
-            or "transfer-encoding" in request.headers
-        ):
-            return AsyncIteratorByteStream(request.stream())
-        return httpx.ByteStream(b"")
+        return method, url.raw, headers.raw, stream
