@@ -4,7 +4,7 @@ resources:
       type: github
       endpoint: github
       name: florimondmanca/azure-pipelines-templates
-      ref: refs/tags/3.2
+      ref: refs/tags/3.4
 
 trigger:
   - master
@@ -18,4 +18,4 @@ variables:
 jobs:
   - template: job--python-check.yml@templates
     parameters:
-      pythonVersion: "3.8"
+      pythonVersion: "3.9"
