@@ -1,42 +1,47 @@
-from typing import Optional, Tuple
+from typing import Tuple
 
-import httpcore
+import httpx
 from starlette.requests import Request
 from starlette.types import Receive, Scope, Send
 
+from ._bytestreams import AsyncIteratorByteStream
+
 
 class ProxyApp:
-    http: httpcore.AsyncHTTPTransport
+    _http: httpx.AsyncBaseTransport
 
     def __init__(self, hostname: str, root_path: str = ""):
-        self.hostname = hostname
-        self.root_path = root_path
+        self._hostname = hostname
+        self._root_path = root_path
 
     async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
         if scope["type"] == "lifespan":
             await self._lifespan(scope, receive, send)
         else:
             assert scope["type"] == "http"
-            await self._request(scope, receive, send)
+            await self._http_request(scope, receive, send)
 
     async def _lifespan(self, scope: Scope, receive: Receive, send: Send) -> None:
         while True:
             message = await receive()
             if message["type"] == "lifespan.startup":
-                self.http = httpcore.AsyncConnectionPool()
+                self._http = httpx.AsyncHTTPTransport()
                 await send({"type": "lifespan.startup.complete"})
             elif message["type"] == "lifespan.shutdown":
-                await self.http.aclose()
+                await self._http.aclose()
                 await send({"type": "lifespan.shutdown.complete"})
                 return
 
-    async def _request(self, scope: Scope, receive: Receive, send: Send) -> None:
-        _, status_code, _, headers, stream = await self.http.request(
+    async def _http_request(self, scope: Scope, receive: Receive, send: Send) -> None:
+        status_code, headers, stream, ext = await self._http.handle_async_request(
             method=self._get_method(scope),
             url=self._get_url(scope),
             headers=self._get_headers(scope),
             stream=self._get_stream(scope, receive),
+            extensions={},
         )
+
+        assert ext["http_version"] == b"HTTP/1.1"
 
         is_redirect = 300 <= status_code < 400
         assert not is_redirect, f"{status_code}: Redirects are not supported yet"
@@ -58,9 +63,9 @@ class ProxyApp:
         return scope["method"].encode("utf-8")
 
     def _get_url(self, scope: Scope) -> Tuple[bytes, bytes, int, bytes]:
-        host = self.hostname.encode("utf-8")
+        host = self._hostname.encode("utf-8")
 
-        full_path = (self.root_path + scope["path"]).encode("utf-8")
+        full_path = (self._root_path + scope["path"]).encode("utf-8")
         if scope["query_string"]:
             full_path += b"?%s" % scope["query_string"]
 
@@ -68,16 +73,14 @@ class ProxyApp:
 
     def _get_headers(self, scope: Scope) -> list:
         headers = [(key, value) for key, value in scope["headers"] if key != b"host"]
-        headers.append((b"host", self.hostname.encode("utf-8")))
+        headers.append((b"host", self._hostname.encode("utf-8")))
         return headers
 
-    def _get_stream(
-        self, scope: Scope, receive: Receive
-    ) -> Optional[httpcore.AsyncByteStream]:
+    def _get_stream(self, scope: Scope, receive: Receive) -> httpx.AsyncByteStream:
         request = Request(scope, receive=receive)
         if (
             "content-length" in request.headers
             or "transfer-encoding" in request.headers
         ):
-            return httpcore.AsyncByteStream(request.stream())
-        return None
+            return AsyncIteratorByteStream(request.stream())
+        return httpx.ByteStream(b"")

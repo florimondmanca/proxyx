@@ -5,4 +5,4 @@ if [ ! -d venv ]; then
   BIN="venv/bin/"
 fi
 
-PROXYCORE_HOSTNAME=www.encode.io PROXYCORE_ROOT_PATH=/httpcore ${BIN}uvicorn example:app --port=${PORT:-8000}
+PROXYX_HOSTNAME=${PROXYX_HOSTNAME:-www.python-httpx.org} PROXYX_ROOT_PATH=${PROXYX_ROOT_PATH:-} ${BIN}uvicorn example:app --port=${PORT:-8000}
